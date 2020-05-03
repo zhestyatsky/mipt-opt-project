@@ -1,1 +1,0 @@
-# mipt-opt-project
