@@ -1,7 +1,6 @@
 # mipt-opt-project
 
 ![GitHub Logo](/images/Gradient_ascent.png)
-Format: ![Alt Text](url)
 
 ## Использованные статьи
 
