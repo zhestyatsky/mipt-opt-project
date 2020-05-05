@@ -3,5 +3,5 @@
 *.aux
 *.synctex.gz
 *.pdf
-.ipynb_checkpoints/*
+.ipynb_checkpoints
 
