@@ -40,7 +40,7 @@ def oja_eigenthings(model, loss_fn, regularizer, train_dataset, n_iterations, p 
     return Eig[0]
 
 def natasha_1_5(train_dataset, batch_size, model, loss_fn, regularizer, lr, n_epochs, sigma, loss_log=True):
-    total_loss = np.zeros(n_epochs+1)
+    total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
         regularizer = lambda x : 0
@@ -50,15 +50,15 @@ def natasha_1_5(train_dataset, batch_size, model, loss_fn, regularizer, lr, n_ep
     if loss_log:
         dl_full = DataLoader(train_dataset,len(train_dataset))
         A, b = next(iter(dl_full))
-        with torch.no_grad():
-            b_pred = model(A)
-            full_loss = loss_fn(b, b_pred) +  regularizer(model.parameters())
-            total_loss[0] = full_loss.item()
+        #with torch.no_grad():
+        #    b_pred = model(A)
+        #    full_loss = loss_fn(b, b_pred) +  regularizer(model.parameters())
+        #    total_loss[0] = full_loss.item()
         
 
     n_subepochs = max(int(lr*sigma*batch_size), 1)
 
-    for epoch in range(1, n_epochs+1):
+    for epoch in range(n_epochs):
 
         model_tilde = copy.deepcopy(model)
         if torch.cuda.is_available():
@@ -106,7 +106,7 @@ def natasha_reg(parameters, init_parameters, L, L_2, delta):
 
 
 def natasha_2(train_dataset, model, loss_fn, regularizer, lr, n_epochs, L_2 = 1):
-    total_loss = np.zeros(n_epochs+1)
+    total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
         regularizer = lambda x : 0
@@ -119,13 +119,13 @@ def natasha_2(train_dataset, model, loss_fn, regularizer, lr, n_epochs, L_2 = 1)
     dl_full = DataLoader(train_dataset,len(train_dataset))
     A, b = next(iter(dl_full))
 
-    with torch.no_grad():
-      b_pred = model(A)
-      loss = loss_fn(b, b_pred) + regularizer(model.parameters())
-      total_loss[0] = loss.item()
+    #with torch.no_grad():
+    #  b_pred = model(A)
+    #  loss = loss_fn(b, b_pred) + regularizer(model.parameters())
+    #  total_loss[0] = loss.item()
 
-    epoch = 1
-    while(epoch <= n_epochs):
+    epoch = 0
+    while(epoch < n_epochs):
         eigvecs, eigval = oja_eigenthings(model, loss_fn, regularizer, train_dataset, T, L = L)
         if(eigval <= -0.5*delta):
             factor = 2*torch.bernoulli(torch.tensor(0.5))-1 # +/- 1 with p=0.5
