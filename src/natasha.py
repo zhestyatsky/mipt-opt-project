@@ -137,7 +137,7 @@ def natasha_2(train_dataset, model, loss_fn, regularizer, lr, n_epochs, L_2 = 1)
             curr_params = tuple([p.clone() for p in model.parameters()])
             reg_k = lambda x : natasha_reg(x, curr_params, L, L_2, delta) + regularizer(x)
 
-            natasha_1_5(train_dataset, B, model, loss_fn, reg_k, lr/5, 1, 3*delta)
+            natasha_15(train_dataset, B, model, loss_fn, reg_k, lr/5, 1, 3*delta)
             with torch.no_grad():
                 b_pred = model(A)
                 loss = loss_fn(b_pred, b) + regularizer(model.parameters())
