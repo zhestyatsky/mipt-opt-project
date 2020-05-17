@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import copy
 from torch.utils.data import DataLoader
-import utils
+from utils import param_norm, hessian_vector
 
 def oja_eigenthings(model, loss_fn, regularizer, train_dataset, n_iterations, p = 1e-3, L = 1000): 
     '''
@@ -21,16 +21,16 @@ def oja_eigenthings(model, loss_fn, regularizer, train_dataset, n_iterations, p 
     for _ in range(int(-1*np.log(p))): 
         W = []
         w_1 = [torch.zeros_like(p).normal_(mean=0,std=1) for p in model.parameters()]
-        W.append(tuple( el/utils.param_norm(w_1) for el in w_1))
+        W.append(tuple( el/param_norm(w_1) for el in w_1))
         for i in range(1, T):
             w_last = W[-1]
-            prod = utils.hessian_vector(w_last, model, loss_fn, regularizer, dl_1)
+            prod = hessian_vector(w_last, model, loss_fn, regularizer, dl_1)
             w = [l - eta/L*p for l, p in zip(w_last, prod)]
-            W.append(tuple( el/utils.param_norm(w) for el in w))
+            W.append(tuple( el/param_norm(w) for el in w))
             
         eigvec = W[torch.randint(T, (1,))] #candidate for eigenvector
 
-        prod = utils.hessian_vector(eigvec, model, loss_fn, regularizer, dl_T)
+        prod = hessian_vector(eigvec, model, loss_fn, regularizer, dl_T)
         eigval = torch.zeros(1)
         for v,p in zip(eigvec, prod):
             eigval += (v*p).sum()
@@ -103,7 +103,7 @@ def natasha_15(train_dataset, batch_size, model, loss_fn, regularizer, lr, n_epo
 
 def natasha_reg(parameters, init_parameters, L, L_2, delta):
     diff = [p-init for p, init in zip(parameters, init_parameters)]
-    return L * (max(0, utils.param_norm(diff) - delta/L_2 ))**2
+    return L * (max(0, param_norm(diff) - delta/L_2 ))**2
 
 
 def natasha_2(train_dataset, model, loss_fn, regularizer, lr, n_epochs, L_2 = 1):
