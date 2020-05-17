@@ -106,7 +106,7 @@ def natasha_reg(parameters, init_parameters, L, L_2, delta):
     return L * (max(0, param_norm(diff) - delta/L_2 ))**2
 
 
-def natasha_2(train_dataset, model, loss_fn, regularizer, lr, n_epochs, L_2 = 1):
+def natasha_2(train_dataset, batch_size,  model, loss_fn, regularizer, lr, n_epochs,oja_iterations = 10, L_2 = 1):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
@@ -114,8 +114,8 @@ def natasha_2(train_dataset, model, loss_fn, regularizer, lr, n_epochs, L_2 = 1)
 
     delta = n_epochs**(-0.2)
     L = 1.0/lr
-    B = min(len(train_dataset), int(n_epochs**1.6))
-    T = max(2, int(n_epochs**0.4))
+    B = batch_size#min(len(train_dataset), int(n_epochs**1.6))
+    T = oja_iterations#max(2, int(n_epochs**0.4))
 
     dl_full = DataLoader(train_dataset,len(train_dataset))
     A, b = next(iter(dl_full))
