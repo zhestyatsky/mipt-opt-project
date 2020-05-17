@@ -1,0 +1,8 @@
+.idea
+*.log
+*.aux
+*.synctex.gz
+*.pdf
+.ipynb_checkpoints
+__pycache__
+
