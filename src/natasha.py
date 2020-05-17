@@ -39,7 +39,7 @@ def oja_eigenthings(model, loss_fn, regularizer, train_dataset, n_iterations, p 
     Eig.sort(key = lambda x : x[1])
     return Eig[0]
 
-def natasha_1_5(train_dataset, batch_size, model, loss_fn, regularizer, lr, n_epochs, sigma, loss_log=True):
+def natasha_15(train_dataset, batch_size, model, loss_fn, regularizer, lr, n_epochs, sigma, loss_log=True):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
