@@ -97,7 +97,7 @@ def natasha_15(train_dataset, batch_size, model, loss_fn, regularizer, lr, n_epo
         if loss_log:
             with torch.no_grad():
                 b_pred = model(A)
-                full_loss = loss_fn(b, b_pred) +  regularizer(model.parameters())
+                full_loss = loss_fn(b_pred, b) +  regularizer(model.parameters())
                 total_loss[epoch] = full_loss.item()
     return total_loss
 
@@ -140,7 +140,7 @@ def natasha_2(train_dataset, model, loss_fn, regularizer, lr, n_epochs, L_2 = 1)
             natasha_1_5(train_dataset, B, model, loss_fn, reg_k, lr/5, 1, 3*delta)
             with torch.no_grad():
                 b_pred = model(A)
-                loss = loss_fn(b, b_pred) + regularizer(model.parameters())
+                loss = loss_fn(b_pred, b) + regularizer(model.parameters())
                 total_loss[epoch] = loss.item()
             epoch += 1
     return total_loss

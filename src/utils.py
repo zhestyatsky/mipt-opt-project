@@ -56,9 +56,9 @@ def param_norm(params):
     
 def hessian_vector(vec, model, loss_fn, regularizer, dataloader):
     #vec is a tuple same size as model.parameters()
-    A_i, b_i = next(iter(dataloader))
-    b_pred = model(A_i)
-    loss = loss_fn(b_i, b_pred) + regularizer(model.parameters())
+    x, y = next(iter(dataloader))
+    y_pred = model(x)
+    loss = loss_fn(y_pred, y) + regularizer(model.parameters())
 
     grads = torch.autograd.grad(loss, model.parameters(), create_graph=True)
 
