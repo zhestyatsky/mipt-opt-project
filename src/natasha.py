@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import copy
 from torch.utils.data import DataLoader
+from utils import param_norm, hessian_vector
 
 def oja_eigenthings(model, loss_fn, regularizer, train_dataset, n_iterations, p = 1e-3, L = 1000): 
     '''
@@ -15,7 +16,7 @@ def oja_eigenthings(model, loss_fn, regularizer, train_dataset, n_iterations, p 
     dl_T = DataLoader(train_dataset, T, shuffle=True)
 
     eta = np.sqrt(T)
-    
+     
     
     for _ in range(int(-1*np.log(p))): 
         W = []
