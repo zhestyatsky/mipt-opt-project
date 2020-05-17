@@ -106,7 +106,7 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
                 b_pred = model(A)
                 full_loss = loss_fn(b_pred, b) + \
                     regularizer(model.parameters())
-                total_loss[epoch] = full_loss.item()
+                total_loss[int(epoch)] = full_loss.item()
     return total_loss
 
 
