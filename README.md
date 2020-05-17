@@ -1,4 +1,9 @@
 # mipt-opt-project
+
+![GitHub Logo](/images/Gradient_ascent.png)
+
+=======
+
 ## Использованные статьи
 
 * "Natasha 2: Faster non-convex optimization than sgd." <br>
