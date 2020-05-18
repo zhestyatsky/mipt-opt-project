@@ -38,7 +38,7 @@ def oja_eigenthings(model,
             w = [l - eta / L * p for l, p in zip(w_last, prod)]
             W.append(tuple(el / param_norm(w) for el in w))
 
-        eigvec = W[torch.randint(T, (1,))]  # candidate for eigenvector
+        eigvec = W[torch.randint(T, (1, ))]  # candidate for eigenvector
 
         prod = hessian_vector(eigvec, model, loss_fn, regularizer, dl_T)
         eigval = torch.zeros(1)
@@ -184,14 +184,14 @@ def natasha_2(train_dataset,
                                    delta) + regularizer(x)
 
             _ = natasha_15(train_dataset,
-                       B,
-                       model,
-                       loss_fn,
-                       reg_k,
-                       lr,
-                       natasha15_epochs,
-                       sigma=3 * delta,
-                       loss_log=False)
+                           B,
+                           model,
+                           loss_fn,
+                           reg_k,
+                           lr,
+                           natasha15_epochs,
+                           sigma=3 * delta,
+                           loss_log=False)
             with torch.no_grad():
                 b_pred = model(A)
                 loss = loss_fn(b_pred, b) + regularizer(model.parameters())
