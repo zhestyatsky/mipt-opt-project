@@ -45,7 +45,7 @@ def oja_eigenthings(model, loss_fn, regularizer,
 
 
 def natasha_15(train_dataset, batch_size, model, loss_fn,
-               regularizer, lr, n_epochs, sigma, n_subepochs = None, loss_log=True):
+               regularizer, lr, n_epochs, sigma, n_subepochs=None, loss_log=True):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
@@ -58,15 +58,14 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
         A, b = next(iter(dl_full))
 
     if n_subepochs is None:
-	n_subepochs = int(batch_size**0.5)
+        n_subepochs = int(batch_size**0.5)
 
-    for epoch,x_B,y_B  in enumerate(dl_B):
-	if epoch % 20 == 0:
-	    print(f'epoch: {epoch}', file=sys.stderr)
+    for epoch, x_B, y_B in enumerate(dl_B):
+        if epoch % 20 == 0:
+            print(f'epoch: {epoch}', file=sys.stderr)
 
-	if epoch >= n_epochs:
-	    break;
-
+        if epoch >= n_epochs:
+            break
 
         model_tilde = copy.deepcopy(model)
         if torch.cuda.is_available():
@@ -81,8 +80,8 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
             X = [x_0]
             m = max(int(batch_size / n_subepochs), 1)
             for t, x, y in enumerate(dl_1):
-		if t >= m:
-		    break;
+                if t >= m:
+                    break
                 y_pred_tilde = model_tilde(x)
                 loss_tilde = loss_fn(y_pred_tilde, y) + \
                     regularizer(model_tilde.parameters())
@@ -98,9 +97,10 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
                     for p, nabla in zip(model.parameters(), nablas):
                         p -= lr * nabla
                 X.append(tuple([p.detach() for p in model.parameters()]))
-		
-	    x_caps = tuple(map(lambda x : torch.mean(x,dim=0),  list(map(torch.stack, zip(*X)))))
-	    #ind = torch.randint(m + 1, (1,))
+
+            x_caps = tuple(map(lambda x: torch.mean(x, dim=0),
+                               list(map(torch.stack, zip(*X)))))
+            #ind = torch.randint(m + 1, (1,))
             #x_caps = X[ind]
             with torch.no_grad():
                 for p, x in zip(model.parameters(), x_caps):
@@ -121,7 +121,7 @@ def natasha_reg(parameters, init_parameters, L, L_2, delta):
 
 
 def natasha_2(train_dataset, batch_size, model, loss_fn,
-              regularizer, lr, n_epochs, oja_iterations=10, L = 100, L_2=10):
+              regularizer, lr, n_epochs, oja_iterations=10, L=100, L_2=10):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
@@ -137,8 +137,8 @@ def natasha_2(train_dataset, batch_size, model, loss_fn,
 
     epoch = 0
     while(epoch < n_epochs):
-	if epoch % 20 == 0:
-    	    print(f'epoch: {epoch}', file=sys.stderr)
+        if epoch % 20 == 0:
+            print(f'epoch: {epoch}', file=sys.stderr)
 
         eigvecs, eigval = oja_eigenthings(
             model, loss_fn, regularizer, train_dataset, T, L=L)
@@ -161,8 +161,8 @@ def natasha_2(train_dataset, batch_size, model, loss_fn,
                 reg_k,
                 lr,
                 1,
-                sigma = 3 * delta,
-		loss_log=False)
+                sigma=3 * delta,
+                loss_log=False)
             with torch.no_grad():
                 b_pred = model(A)
                 loss = loss_fn(b_pred, b) + regularizer(model.parameters())
