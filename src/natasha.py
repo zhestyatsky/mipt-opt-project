@@ -44,7 +44,7 @@ def oja_eigenthings(model, loss_fn, regularizer,
 
 
 def natasha_15(train_dataset, batch_size, model, loss_fn,
-               regularizer, lr, n_epochs, sigma, loss_log=True):
+               regularizer, lr, n_epochs, sigma, n_subepochs = None, loss_log=True):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
@@ -60,7 +60,8 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
         #    full_loss = loss_fn(b, b_pred) +  regularizer(model.parameters())
         #    total_loss[0] = full_loss.item()
 
-    n_subepochs = max(int(lr * sigma * batch_size), 1)
+    if n_subepochs is None:
+	n_subepochs = int(batch_size**0.5)
 
     for epoch in range(n_epochs):
 
@@ -116,14 +117,14 @@ def natasha_reg(parameters, init_parameters, L, L_2, delta):
 
 
 def natasha_2(train_dataset, batch_size, model, loss_fn,
-              regularizer, lr, n_epochs, oja_iterations=10, L_2=1):
+              regularizer, lr, n_epochs, oja_iterations=10, L = 1000, L_2=10):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
         def regularizer(x): return 0
 
     delta = n_epochs**(-0.2)
-    L = 1.0 / lr
+    #L = 1.0 / lr
     B = batch_size  # min(len(train_dataset), int(n_epochs**1.6))
     T = oja_iterations  # max(2, int(n_epochs**0.4))
 
