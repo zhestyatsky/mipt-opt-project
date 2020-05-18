@@ -16,9 +16,6 @@ def gradient_descent(train_dataset, batch_size, model, loss, regularizer, lr,
     opt = torch.optim.SGD(model.parameters(), lr=lr)
 
     for epoch in range(n_epochs):
-        if epoch % 20 == 0:
-            print(f'epoch: {epoch}', file=sys.stderr)
-
         for x_batch, y_batch in batch_train_loader:
             # Optimize with batch gradient
             opt.zero_grad()

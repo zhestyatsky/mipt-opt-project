@@ -1,7 +1,6 @@
 import copy
 import numpy as np
 import torch
-import sys
 from torch.utils.data import DataLoader
 
 
@@ -22,8 +21,6 @@ def spider_boost(train_dataset, batch_size, model, loss, regularizer, lr,
     opt_prev = torch.optim.SGD(model_prev.parameters(), lr=lr)
 
     for epoch in range(n_epochs):
-        if epoch % 20 == 0:
-            print(f'epoch: {epoch}', file=sys.stderr)
 
         # Calculate full gradient first
         opt.zero_grad()

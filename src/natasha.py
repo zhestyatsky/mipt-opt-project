@@ -78,9 +78,6 @@ def natasha_15(train_dataset,
         n_subepochs = int(batch_size**0.5)
 
     for epoch, (x_B, y_B) in enumerate(dl_B):
-        if (epoch % 20 == 0) and loss_log:
-            print(f'epoch: {epoch}', file=sys.stderr)
-
         if epoch >= n_epochs:
             break
 
@@ -166,8 +163,6 @@ def natasha_2(train_dataset,
 
     epoch = 0
     while epoch < n_epochs:
-        if epoch % 20 == 0:
-            print(f'epoch: {epoch}', file=sys.stderr)
 
         eigvecs, eigval = oja_eigenthings(model,
                                           loss_fn,
