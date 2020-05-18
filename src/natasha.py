@@ -4,7 +4,6 @@ import copy
 from torch.utils.data import DataLoader
 from utils import param_norm, param_normalize, hessian_vector
 from spider_boost import spider_boost
-import sys
 
 
 def oja_eigenthings(model,
@@ -91,7 +90,7 @@ def natasha_15(train_dataset,
         mu_s = torch.autograd.grad(loss, model.parameters())
 
         for subepoch in range(n_subepochs):
-            print("subepoch ",subepoch, "/", n_subepochs)
+            print("subepoch ", subepoch, "/", n_subepochs)
             x_0 = tuple([p.detach() for p in model.parameters()])
             X = [x_0]
             m = max(int(batch_size / n_subepochs), 1)
@@ -158,7 +157,7 @@ def natasha_2(train_dataset,
             return 0
 
     delta = batch_size**(-0.125)
-    B = batch_size 
+    B = batch_size
     T = oja_iterations
 
     dl_full = DataLoader(train_dataset, len(train_dataset))
@@ -185,10 +184,19 @@ def natasha_2(train_dataset,
             def reg_k(x):
                 return natasha_reg(x, curr_params, L, L_2,
                                    delta) + regularizer(x)
+
             if spider:
-                _  = spider_boost(train_dataset, B, model, loss_fn, reg_k, lr, 1)
+                _ = spider_boost(train_dataset, B, model, loss_fn, reg_k, lr,
+                                 1)
             else:
-                _ = natasha_15(train_dataset, B, model, loss_fn, reg_k, lr, 1, sigma = 3*delta)
+                _ = natasha_15(train_dataset,
+                               B,
+                               model,
+                               loss_fn,
+                               reg_k,
+                               lr,
+                               1,
+                               sigma=3 * delta)
 
             with torch.no_grad():
                 b_pred = model(A)

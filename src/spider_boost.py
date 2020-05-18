@@ -4,8 +4,14 @@ import torch
 from torch.utils.data import DataLoader
 
 
-def spider_boost(train_dataset, batch_size, model, loss, regularizer, lr,
-                 n_epochs):
+def spider_boost(train_dataset,
+                 batch_size,
+                 model,
+                 loss,
+                 regularizer,
+                 lr,
+                 n_epochs,
+                 momentum=0):
     total_loss = np.zeros(n_epochs)
 
     x_full, y_full = train_dataset.data, train_dataset.targets
@@ -17,8 +23,10 @@ def spider_boost(train_dataset, batch_size, model, loss, regularizer, lr,
     if torch.cuda.is_available():
         model_prev = model_prev.cuda()
 
-    opt = torch.optim.SGD(model.parameters(), lr=lr)
-    opt_prev = torch.optim.SGD(model_prev.parameters(), lr=lr)
+    opt = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+    opt_prev = torch.optim.SGD(model_prev.parameters(),
+                               lr=lr,
+                               momentum=momentum)
 
     for epoch in range(n_epochs):
 
@@ -41,7 +49,7 @@ def spider_boost(train_dataset, batch_size, model, loss, regularizer, lr,
             # Add current state gradients
             y_pred = model(x_batch)
             batch_loss = loss(y_pred, y_batch) + \
-                regularizer(model.parameters())
+                         regularizer(model.parameters())
             batch_loss.backward()
 
             # Calculate previous state gradients
