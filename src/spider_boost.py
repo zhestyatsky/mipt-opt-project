@@ -5,15 +5,14 @@ import sys
 from torch.utils.data import DataLoader
 
 
-def spider_boost(train_dataset, batch_size, model,
-                 loss, regularizer, lr, n_epochs):
+def spider_boost(train_dataset, batch_size, model, loss, regularizer, lr,
+                 n_epochs):
     total_loss = np.zeros(n_epochs)
 
     x_full, y_full = train_dataset.data, train_dataset.targets
-    batch_train_loader = DataLoader(
-        dataset=train_dataset,
-        batch_size=batch_size,
-        shuffle=True)
+    batch_train_loader = DataLoader(dataset=train_dataset,
+                                    batch_size=batch_size,
+                                    shuffle=True)
 
     model_prev = copy.deepcopy(model)
     if torch.cuda.is_available():
@@ -33,8 +32,8 @@ def spider_boost(train_dataset, batch_size, model,
         main_loss.backward()
 
         # Saving current model weights and zero grad them
-        for param, param_prev in zip(
-                model.parameters(), model_prev.parameters()):
+        for param, param_prev in zip(model.parameters(),
+                                     model_prev.parameters()):
             param_prev.data = param.data.clone().detach()
         opt_prev.zero_grad()
 
@@ -54,8 +53,8 @@ def spider_boost(train_dataset, batch_size, model,
             batch_loss_prev.backward()
 
             # Subtract previous state gradients
-            for param, param_prev in zip(
-                    model.parameters(), model_prev.parameters()):
+            for param, param_prev in zip(model.parameters(),
+                                         model_prev.parameters()):
                 param.grad.data -= param_prev.grad.data
                 param_prev.data = param.data.clone().detach()
             opt_prev.zero_grad()
@@ -65,6 +64,6 @@ def spider_boost(train_dataset, batch_size, model,
 
         # Save loss at the end of the epoch
         y_pred = model(x_full)
-        total_loss[epoch] = loss(y_pred, y_full).item(
-        ) + regularizer(model.parameters()).item()
+        total_loss[epoch] = loss(y_pred, y_full).item() + regularizer(
+            model.parameters()).item()
     return total_loss

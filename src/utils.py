@@ -4,15 +4,14 @@ import sys
 from torch.utils.data import DataLoader, Dataset
 
 
-def gradient_descent(train_dataset, batch_size, model,
-                     loss, regularizer, lr, n_epochs):
+def gradient_descent(train_dataset, batch_size, model, loss, regularizer, lr,
+                     n_epochs):
     total_loss = np.zeros(n_epochs)
 
     x_full, y_full = train_dataset.data, train_dataset.targets
-    batch_train_loader = DataLoader(
-        dataset=train_dataset,
-        batch_size=batch_size,
-        shuffle=True)
+    batch_train_loader = DataLoader(dataset=train_dataset,
+                                    batch_size=batch_size,
+                                    shuffle=True)
 
     opt = torch.optim.SGD(model.parameters(), lr=lr)
 
@@ -31,12 +30,13 @@ def gradient_descent(train_dataset, batch_size, model,
 
         # Save loss at the end of the epoch
         y_pred = model(x_full)
-        total_loss[epoch] = loss(y_pred, y_full).item(
-        ) + regularizer(model.parameters()).item()
+        total_loss[epoch] = loss(y_pred, y_full).item() + regularizer(
+            model.parameters()).item()
     return total_loss
 
 
 class DatasetWrapper(Dataset):
+
     def __init__(self, dataset):
         self.data, self.targets = dataset.data, dataset.targets
 
@@ -83,5 +83,5 @@ def hessian_vector(vec, model, loss_fn, regularizer, dataloader):
 def regularizer(parameters, alpha=0.1):
     value = 0.0
     for p in parameters:
-        value += alpha * (p ** 2 / (1 + p ** 2)).sum()
+        value += alpha * (p**2 / (1 + p**2)).sum()
     return value

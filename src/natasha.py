@@ -6,11 +6,16 @@ from utils import param_norm, hessian_vector
 import sys
 
 
-def oja_eigenthings(model, loss_fn, regularizer,
-                    train_dataset, n_iterations, p=1e-3, L=1000):
-    '''
-    Computing etimates for minimum eigenvalue and its eigenvector
-    '''
+def oja_eigenthings(model,
+                    loss_fn,
+                    regularizer,
+                    train_dataset,
+                    n_iterations,
+                    p=1e-3,
+                    L=1000):
+    """
+    Computing estimates for minimum eigenvalue and its eigenvector
+    """
     Eig = []
 
     T = n_iterations
@@ -22,8 +27,10 @@ def oja_eigenthings(model, loss_fn, regularizer,
 
     for _ in range(int(-1 * np.log(p))):
         W = []
-        w_1 = [torch.zeros_like(p).normal_(mean=0, std=1)
-               for p in model.parameters()]
+        w_1 = [
+            torch.zeros_like(p).normal_(mean=0, std=1)
+            for p in model.parameters()
+        ]
         W.append(tuple(el / param_norm(w_1) for el in w_1))
         for i in range(1, T):
             w_last = W[-1]
@@ -44,12 +51,22 @@ def oja_eigenthings(model, loss_fn, regularizer,
     return Eig[0]
 
 
-def natasha_15(train_dataset, batch_size, model, loss_fn,
-               regularizer, lr, n_epochs, sigma, n_subepochs=None, loss_log=True):
+def natasha_15(train_dataset,
+               batch_size,
+               model,
+               loss_fn,
+               regularizer,
+               lr,
+               n_epochs,
+               sigma,
+               n_subepochs=None,
+               loss_log=True):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
-        def regularizer(x): return 0
+
+        def regularizer(x):
+            return 0
 
     dl_1 = DataLoader(train_dataset, 1, shuffle=True)
     dl_B = DataLoader(train_dataset, batch_size, shuffle=True)
@@ -85,23 +102,25 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
                 y_pred_tilde = model_tilde(x)
                 loss_tilde = loss_fn(y_pred_tilde, y) + \
                     regularizer(model_tilde.parameters())
-                grads_tilde = torch.autograd.grad(
-                    loss_tilde, model_tilde.parameters())
+                grads_tilde = torch.autograd.grad(loss_tilde,
+                                                  model_tilde.parameters())
                 y_pred_t = model(x)
                 loss_t = loss_fn(y_pred_t, y) + \
                     regularizer(model.parameters())
                 grads_t = torch.autograd.grad(loss_t, model.parameters())
-                nablas = tuple([n_t - n_til + mu + 2 * sigma * (x_t - x_cap) for n_t,
-                                n_til, mu, x_t, x_cap in zip(grads_t, grads_tilde, mu_s, X[-1], x_0)])
+                nablas = tuple([
+                    n_t - n_til + mu + 2 * sigma * (x_t - x_cap)
+                    for n_t, n_til, mu, x_t, x_cap in zip(
+                        grads_t, grads_tilde, mu_s, X[-1], x_0)
+                ])
                 with torch.no_grad():
                     for p, nabla in zip(model.parameters(), nablas):
                         p -= lr * nabla
                 X.append(tuple([p.detach() for p in model.parameters()]))
 
-            x_caps = tuple(map(lambda x: torch.mean(x, dim=0),
-                               list(map(torch.stack, zip(*X)))))
-            #ind = torch.randint(m + 1, (1,))
-            #x_caps = X[ind]
+            x_caps = tuple(
+                map(lambda x: torch.mean(x, dim=0),
+                    list(map(torch.stack, zip(*X)))))
             with torch.no_grad():
                 for p, x in zip(model.parameters(), x_caps):
                     p.copy_(x)
@@ -120,15 +139,25 @@ def natasha_reg(parameters, init_parameters, L, L_2, delta):
     return L * (max(0, param_norm(diff) - delta / L_2))**2
 
 
-def natasha_2(train_dataset, batch_size, model, loss_fn,
-              regularizer, lr, n_epochs, natasha15_epochs=1, oja_iterations=10, L=100, L_2=10):
+def natasha_2(train_dataset,
+              batch_size,
+              model,
+              loss_fn,
+              regularizer,
+              lr,
+              n_epochs,
+              natasha15_epochs=1,
+              oja_iterations=10,
+              L=100,
+              L_2=10):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
-        def regularizer(x): return 0
+
+        def regularizer(x):
+            return 0
 
     delta = batch_size**(-0.125)
-    #L = 1.0 / lr
     B = batch_size  # min(len(train_dataset), int(n_epochs**1.6))
     T = oja_iterations  # max(2, int(n_epochs**0.4))
 
@@ -136,13 +165,17 @@ def natasha_2(train_dataset, batch_size, model, loss_fn,
     A, b = next(iter(dl_full))
 
     epoch = 0
-    while(epoch < n_epochs):
+    while epoch < n_epochs:
         if epoch % 20 == 0:
             print(f'epoch: {epoch}', file=sys.stderr)
 
-        eigvecs, eigval = oja_eigenthings(
-            model, loss_fn, regularizer, train_dataset, T, L=L)
-        if(eigval <= -0.5 * delta):
+        eigvecs, eigval = oja_eigenthings(model,
+                                          loss_fn,
+                                          regularizer,
+                                          train_dataset,
+                                          T,
+                                          L=L)
+        if eigval <= -0.5 * delta:
             # +/- 1 with p=0.5
             factor = 2 * torch.bernoulli(torch.tensor(0.5)) - 1
             with torch.no_grad():
@@ -150,19 +183,20 @@ def natasha_2(train_dataset, batch_size, model, loss_fn,
                     p += factor / L_2 * ev
         else:
             curr_params = tuple([p.clone() for p in model.parameters()])
-            def reg_k(x): return natasha_reg(
-                x, curr_params, L, L_2, delta) + regularizer(x)
 
-            natasha_15(
-                train_dataset,
-                B,
-                model,
-                loss_fn,
-                reg_k,
-                lr,
-                natasha15_epochs,
-                sigma=3 * delta,
-                loss_log=False)
+            def reg_k(x):
+                return natasha_reg(x, curr_params, L, L_2,
+                                   delta) + regularizer(x)
+
+            natasha_15(train_dataset,
+                       B,
+                       model,
+                       loss_fn,
+                       reg_k,
+                       lr,
+                       natasha15_epochs,
+                       sigma=3 * delta,
+                       loss_log=False)
             with torch.no_grad():
                 b_pred = model(A)
                 loss = loss_fn(b_pred, b) + regularizer(model.parameters())
