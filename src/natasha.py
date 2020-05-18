@@ -3,6 +3,7 @@ import numpy as np
 import copy
 from torch.utils.data import DataLoader
 from utils import param_norm, hessian_vector
+import sys
 
 
 def oja_eigenthings(model, loss_fn, regularizer,
@@ -60,8 +61,12 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
 	n_subepochs = int(batch_size**0.5)
 
     for epoch,x_B,y_B  in enumerate(dl_B):
+	if epoch % 20 == 0:
+	    print(f'epoch: {epoch}', file=sys.stderr)
+
 	if epoch >= n_epochs:
 	    break;
+
 
         model_tilde = copy.deepcopy(model)
         if torch.cuda.is_available():
@@ -116,13 +121,13 @@ def natasha_reg(parameters, init_parameters, L, L_2, delta):
 
 
 def natasha_2(train_dataset, batch_size, model, loss_fn,
-              regularizer, lr, n_epochs, oja_iterations=10, L = 1000, L_2=10):
+              regularizer, lr, n_epochs, oja_iterations=10, L = 100, L_2=10):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
         def regularizer(x): return 0
 
-    delta = n_epochs**(-0.2)
+    delta = batch_size**(-0.125)
     #L = 1.0 / lr
     B = batch_size  # min(len(train_dataset), int(n_epochs**1.6))
     T = oja_iterations  # max(2, int(n_epochs**0.4))
@@ -132,6 +137,9 @@ def natasha_2(train_dataset, batch_size, model, loss_fn,
 
     epoch = 0
     while(epoch < n_epochs):
+	if epoch % 20 == 0:
+    	    print(f'epoch: {epoch}', file=sys.stderr)
+
         eigvecs, eigval = oja_eigenthings(
             model, loss_fn, regularizer, train_dataset, T, L=L)
         if(eigval <= -0.5 * delta):
@@ -151,7 +159,7 @@ def natasha_2(train_dataset, batch_size, model, loss_fn,
                 model,
                 loss_fn,
                 reg_k,
-                lr / 5,
+                lr,
                 1,
                 sigma = 3 * delta,
 		loss_log=False)
