@@ -61,7 +61,7 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
         n_subepochs = int(batch_size**0.5)
 
     for epoch, (x_B, y_B) in enumerate(dl_B):
-        if epoch % 20 == 0:
+        if (epoch % 20 == 0) and loss_log:
             print(f'epoch: {epoch}', file=sys.stderr)
 
         if epoch >= n_epochs:
@@ -121,7 +121,7 @@ def natasha_reg(parameters, init_parameters, L, L_2, delta):
 
 
 def natasha_2(train_dataset, batch_size, model, loss_fn,
-              regularizer, lr, n_epochs, oja_iterations=10, L=100, L_2=10):
+              regularizer, lr, n_epochs, natasha15_epochs=1, oja_iterations=10, L=100, L_2=10):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
@@ -160,7 +160,7 @@ def natasha_2(train_dataset, batch_size, model, loss_fn,
                 loss_fn,
                 reg_k,
                 lr,
-                1,
+                natasha15_epochs,
                 sigma=3 * delta,
                 loss_log=False)
             with torch.no_grad():
