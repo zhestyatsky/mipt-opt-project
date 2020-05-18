@@ -60,7 +60,7 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
     if n_subepochs is None:
         n_subepochs = int(batch_size**0.5)
 
-    for epoch, x_B, y_B in enumerate(dl_B):
+    for epoch, (x_B, y_B) in enumerate(dl_B):
         if epoch % 20 == 0:
             print(f'epoch: {epoch}', file=sys.stderr)
 
@@ -79,7 +79,7 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
             x_0 = tuple([p.detach() for p in model.parameters()])
             X = [x_0]
             m = max(int(batch_size / n_subepochs), 1)
-            for t, x, y in enumerate(dl_1):
+            for t, (x, y) in enumerate(dl_1):
                 if t >= m:
                     break
                 y_pred_tilde = model_tilde(x)
