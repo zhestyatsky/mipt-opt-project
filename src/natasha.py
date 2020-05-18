@@ -183,7 +183,7 @@ def natasha_2(train_dataset,
                 return natasha_reg(x, curr_params, L, L_2,
                                    delta) + regularizer(x)
 
-            natasha_15(train_dataset,
+            _ = natasha_15(train_dataset,
                        B,
                        model,
                        loss_fn,
