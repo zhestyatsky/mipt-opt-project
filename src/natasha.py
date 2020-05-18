@@ -55,38 +55,36 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
     if loss_log:
         dl_full = DataLoader(train_dataset, len(train_dataset))
         A, b = next(iter(dl_full))
-        # with torch.no_grad():
-        #    b_pred = model(A)
-        #    full_loss = loss_fn(b, b_pred) +  regularizer(model.parameters())
-        #    total_loss[0] = full_loss.item()
 
     if n_subepochs is None:
 	n_subepochs = int(batch_size**0.5)
 
-    for epoch in range(n_epochs):
+    for epoch,x_B,y_B  in enumerate(dl_B):
+	if epoch >= n_epochs:
+	    break;
 
         model_tilde = copy.deepcopy(model)
         if torch.cuda.is_available():
             model_tilde = model_tilde.cuda()
 
-        A_i, b_i = next(iter(dl_B))
-        b_pred = model(A_i)
-        loss = loss_fn(b_pred, b_i) + regularizer(model.parameters())
+        y_B_pred = model(x_B)
+        loss = loss_fn(y_B_pred, y_B) + regularizer(model.parameters())
         mu_s = torch.autograd.grad(loss, model.parameters())
 
         for subepoch in range(n_subepochs):
             x_0 = tuple([p.detach() for p in model.parameters()])
             X = [x_0]
             m = max(int(batch_size / n_subepochs), 1)
-            for t in range(m):
-                A_i, b_i = next(iter(dl_1))
-                b_pred_tilde = model_tilde(A_i)
-                loss_tilde = loss_fn(b_pred_tilde, b_i) + \
+            for t, x, y in enumerate(dl_1):
+		if t >= m:
+		    break;
+                y_pred_tilde = model_tilde(x)
+                loss_tilde = loss_fn(y_pred_tilde, y) + \
                     regularizer(model_tilde.parameters())
                 grads_tilde = torch.autograd.grad(
                     loss_tilde, model_tilde.parameters())
-                b_pred_t = model(A_i)
-                loss_t = loss_fn(b_pred_t, b_i) + \
+                y_pred_t = model(x)
+                loss_t = loss_fn(y_pred_t, x) + \
                     regularizer(model.parameters())
                 grads_t = torch.autograd.grad(loss_t, model.parameters())
                 nablas = tuple([n_t - n_til + mu + 2 * sigma * (x_t - x_cap) for n_t,
@@ -95,9 +93,10 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
                     for p, nabla in zip(model.parameters(), nablas):
                         p -= lr * nabla
                 X.append(tuple([p.detach() for p in model.parameters()]))
-            ind = torch.randint(m + 1, (1,))
-            # print(ind)
-            x_caps = X[ind]
+		
+	    x_caps = tuple(map(lambda x : torch.mean(x,dim=0),  list(map(torch.stack, zip(*X)))))
+	    #ind = torch.randint(m + 1, (1,))
+            #x_caps = X[ind]
             with torch.no_grad():
                 for p, x in zip(model.parameters(), x_caps):
                     p.copy_(x)
@@ -131,11 +130,6 @@ def natasha_2(train_dataset, batch_size, model, loss_fn,
     dl_full = DataLoader(train_dataset, len(train_dataset))
     A, b = next(iter(dl_full))
 
-    # with torch.no_grad():
-    #  b_pred = model(A)
-    #  loss = loss_fn(b, b_pred) + regularizer(model.parameters())
-    #  total_loss[0] = loss.item()
-
     epoch = 0
     while(epoch < n_epochs):
         eigvecs, eigval = oja_eigenthings(
@@ -159,7 +153,7 @@ def natasha_2(train_dataset, batch_size, model, loss_fn,
                 reg_k,
                 lr / 5,
                 1,
-                3 * delta,
+                sigma = 3 * delta,
 		loss_log=False)
             with torch.no_grad():
                 b_pred = model(A)
