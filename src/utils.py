@@ -1,11 +1,10 @@
 import numpy as np
 import torch
-import sys
 from torch.utils.data import DataLoader, Dataset
 
 
-def gradient_descent(train_dataset, batch_size, model, loss, regularizer, lr,
-                     n_epochs):
+def opt_algorithm(opt, train_dataset, batch_size, model, loss, regularizer,
+                  n_epochs):
     total_loss = np.zeros(n_epochs)
 
     x_full, y_full = train_dataset.data, train_dataset.targets
@@ -13,15 +12,13 @@ def gradient_descent(train_dataset, batch_size, model, loss, regularizer, lr,
                                     batch_size=batch_size,
                                     shuffle=True)
 
-    opt = torch.optim.SGD(model.parameters(), lr=lr)
-
     for epoch in range(n_epochs):
         for x_batch, y_batch in batch_train_loader:
             # Optimize with batch gradient
             opt.zero_grad()
             y_pred = model(x_batch)
             batch_loss = loss(y_pred, y_batch) + \
-                regularizer(model.parameters())
+                         regularizer(model.parameters())
             batch_loss.backward()
             opt.step()
 
@@ -33,7 +30,6 @@ def gradient_descent(train_dataset, batch_size, model, loss, regularizer, lr,
 
 
 class DatasetWrapper(Dataset):
-
     def __init__(self, dataset):
         self.data, self.targets = dataset.data, dataset.targets
 
