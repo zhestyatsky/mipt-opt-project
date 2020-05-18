@@ -88,7 +88,7 @@ def natasha_15(train_dataset, batch_size, model, loss_fn,
                 grads_tilde = torch.autograd.grad(
                     loss_tilde, model_tilde.parameters())
                 y_pred_t = model(x)
-                loss_t = loss_fn(y_pred_t, x) + \
+                loss_t = loss_fn(y_pred_t, y) + \
                     regularizer(model.parameters())
                 grads_t = torch.autograd.grad(loss_t, model.parameters())
                 nablas = tuple([n_t - n_til + mu + 2 * sigma * (x_t - x_cap) for n_t,
