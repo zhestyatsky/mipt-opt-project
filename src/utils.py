@@ -53,6 +53,12 @@ def param_norm(params):
         s += (param**2).sum()
     return torch.sqrt(s)
 
+def param_normalize(params):
+    p_norm = param_norm(params)
+    if p_norm > 0:
+       return tuple([p/p_norm for p in params])
+    else:
+       return params
 
 def hessian_vector(vec, model, loss_fn, regularizer, dataloader):
     # vec is a tuple same size as model.parameters()
