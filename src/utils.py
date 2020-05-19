@@ -46,7 +46,7 @@ class DatasetWrapper(Dataset):
 
 
 def param_norm(params):
-    s = torch.zeros(1)
+    s = torch.zeros(1) + 1e-16
     if torch.cuda.is_available():
         s = s.cuda()
     for param in params:
