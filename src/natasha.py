@@ -90,7 +90,7 @@ def natasha_15(train_dataset,
         mu_s = torch.autograd.grad(loss, model.parameters())
 
         for subepoch in range(n_subepochs):
-            print("subepoch ", subepoch, "/", n_subepochs)
+            #print("subepoch ", subepoch, "/", n_subepochs)
             x_0 = tuple([p.detach() for p in model.parameters()])
             X = [x_0]
             m = max(int(batch_size / n_subepochs), 1)
@@ -102,11 +102,13 @@ def natasha_15(train_dataset,
                     regularizer(model_tilde.parameters())
                 grads_tilde = torch.autograd.grad(loss_tilde,
                                                   model_tilde.parameters())
+                #print(loss_tilde, grads_tilde)
                 y_pred_t = model(x)
                 loss_t = loss_fn(y_pred_t, y) + \
                     regularizer(model.parameters())
-
+                #print(subepoch, regularizer(model.parameters()))
                 grads_t = torch.autograd.grad(loss_t, model.parameters())
+                #print(loss_t, grads_t)
                 nablas = tuple([
                     n_t - n_til + mu + 2 * sigma * (x_t - x_cap)
                     for n_t, n_til, mu, x_t, x_cap in zip(
@@ -134,8 +136,13 @@ def natasha_15(train_dataset,
 
 
 def natasha_reg(parameters, init_parameters, L, L_2, delta):
-    diff = [p - init for p, init in zip(parameters, init_parameters)]
-    return L * (max(torch.zeros(1), param_norm(diff) - delta / L_2))**2
+    dist = param_norm([p - init for p, init in zip(parameters, init_parameters)])
+    #print(dist)
+    #zero = torch.zeros(1)
+    #if torch.cuda.is_available():
+    #    zero = zero.cuda()
+    return L * torch.nn.functional.relu(dist - delta/L_2)**2
+    #return L * (torch.max(zero, param_norm(diff) - delta / L_2))**2
 
 
 def natasha_2(train_dataset,
@@ -147,8 +154,8 @@ def natasha_2(train_dataset,
               n_epochs,
               spider=False,
               oja_iterations=10,
-              L=100,
-              L_2=10):
+              L=1,
+              L_2=1000):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
@@ -177,13 +184,15 @@ def natasha_2(train_dataset,
             factor = 2 * torch.bernoulli(torch.tensor(0.5)) - 1
             with torch.no_grad():
                 for p, ev in zip(model.parameters(), eigvecs):
-                    p += factor / L_2 * ev
+                    p += factor*delta / L_2 * ev
         else:
             curr_params = tuple([p.clone() for p in model.parameters()])
 
             def reg_k(x):
                 return natasha_reg(x, curr_params, L, L_2,
                                    delta) + regularizer(x)
+
+            #print(regularizer(model.parameters()), reg_k(model.parameters()))
 
             if spider:
                 _ = spider_boost(train_dataset, B, model, loss_fn, reg_k, lr,
@@ -197,6 +206,7 @@ def natasha_2(train_dataset,
                                lr,
                                1,
                                sigma=3 * delta)
+            #print(_)
 
             with torch.no_grad():
                 b_pred = model(A)
