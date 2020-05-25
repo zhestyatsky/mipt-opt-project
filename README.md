@@ -1,8 +1,8 @@
-# Natasha 2 vs SpiderBoost
+# Natasha 2 vs SpiderBoost 
 
 ![GitHub Logo](/img/spider1.jpg)
 
-## Использованные статьи
+## Used articles
 
 ### [Natasha 2: Faster non-convex optimization than sgd.](https://papers.nips.cc/paper/7533-natasha-2-faster-non-convex-optimization-than-sgd.pdf)
 
