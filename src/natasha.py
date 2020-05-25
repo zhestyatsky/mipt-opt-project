@@ -32,13 +32,16 @@ def oja_eigenthings(model,
             for p in model.parameters()
         ]
         W.append(param_normalize(w_1))
+
+        #Perform needed amount of Oja iterations
         for i in range(1, T):
             w_last = W[-1]
             prod = hessian_vector(w_last, model, loss_fn, regularizer, dl_1)
             w = [l - eta / L * p for l, p in zip(w_last, prod)]
             W.append(param_normalize(w))
-
-        eigvec = W[torch.randint(T, (1, ))]  # candidate for eigenvector
+        
+        #Get a candidate for eigenvector
+        eigvec = W[torch.randint(T, (1, ))]
 
         prod = hessian_vector(eigvec, model, loss_fn, regularizer, dl_T)
         eigval = torch.zeros(1)
@@ -59,8 +62,7 @@ def natasha_15(train_dataset,
                lr,
                n_epochs,
                sigma,
-               n_subepochs=None,
-               loss_log=True):
+               n_subepochs=None):
     total_loss = np.zeros(n_epochs)
 
     if regularizer is None:
@@ -70,16 +72,16 @@ def natasha_15(train_dataset,
 
     dl_1 = DataLoader(train_dataset, 1, shuffle=True)
     dl_B = DataLoader(train_dataset, batch_size, shuffle=True)
-    if loss_log:
-        dl_full = DataLoader(train_dataset, len(train_dataset))
-        A, b = next(iter(dl_full))
+
+    dl_full = DataLoader(train_dataset, len(train_dataset))
+    A, b = next(iter(dl_full))
 
     if n_subepochs is None:
         n_subepochs = int(batch_size**0.5)
 
-    for epoch, (x_B, y_B) in enumerate(dl_B):
-        if epoch >= n_epochs:
-            break
+    for epoch in range(n_epochs):
+
+        x_B, y_B = next(iter(dl_B))
 
         model_tilde = copy.deepcopy(model)
         if torch.cuda.is_available():
@@ -89,8 +91,8 @@ def natasha_15(train_dataset,
         loss = loss_fn(y_B_pred, y_B) + regularizer(model.parameters())
         mu_s = torch.autograd.grad(loss, model.parameters())
 
+        #Each epoch divides into subepochs
         for subepoch in range(n_subepochs):
-            #print("subepoch ", subepoch, "/", n_subepochs)
             x_0 = tuple([p.detach() for p in model.parameters()])
             X = [x_0]
             m = max(int(batch_size / n_subepochs), 1)
@@ -102,13 +104,12 @@ def natasha_15(train_dataset,
                     regularizer(model_tilde.parameters())
                 grads_tilde = torch.autograd.grad(loss_tilde,
                                                   model_tilde.parameters())
-                #print(loss_tilde, grads_tilde)
+
                 y_pred_t = model(x)
                 loss_t = loss_fn(y_pred_t, y) + \
                     regularizer(model.parameters())
-                #print(subepoch, regularizer(model.parameters()))
                 grads_t = torch.autograd.grad(loss_t, model.parameters())
-                #print(loss_t, grads_t)
+
                 nablas = tuple([
                     n_t - n_til + mu + 2 * sigma * (x_t - x_cap)
                     for n_t, n_til, mu, x_t, x_cap in zip(
@@ -119,31 +120,26 @@ def natasha_15(train_dataset,
                         p -= lr * nabla
                 X.append(tuple([p.detach() for p in model.parameters()]))
 
+            #Next point is an average of X elements
             x_caps = tuple(
                 map(lambda x: torch.mean(x, dim=0),
-                    list(map(torch.stack, zip(*X)))))
+                    list(map(torch.stack, zip(*X))))) 
+
             with torch.no_grad():
                 for p, x in zip(model.parameters(), x_caps):
                     p.copy_(x)
 
-        if loss_log:
-            with torch.no_grad():
-                b_pred = model(A)
-                full_loss = loss_fn(b_pred, b) + \
-                    regularizer(model.parameters())
-                total_loss[epoch] = full_loss.item()
+        with torch.no_grad():
+            b_pred = model(A)
+            full_loss = loss_fn(b_pred, b) + \
+                regularizer(model.parameters())
+            total_loss[epoch] = full_loss.item()
     return total_loss
 
 
 def natasha_reg(parameters, init_parameters, L, L_2, delta):
     dist = param_norm([p - init for p, init in zip(parameters, init_parameters)])
-    #print(dist)
-    #zero = torch.zeros(1)
-    #if torch.cuda.is_available():
-    #    zero = zero.cuda()
     return L * torch.nn.functional.relu(dist - delta/L_2)**2
-    #return L * (torch.max(zero, param_norm(diff) - delta / L_2))**2
-
 
 def natasha_2(train_dataset,
               batch_size,
@@ -172,13 +168,15 @@ def natasha_2(train_dataset,
 
     epoch = 0
     while epoch < n_epochs:
-
+        
+        #Compute minimal eigenvalue via Oja's algorythm
         eigvecs, eigval = oja_eigenthings(model,
                                           loss_fn,
                                           regularizer,
                                           train_dataset,
                                           T,
                                           L=L)
+        #Choose whether to perform an optimizer step or try to move from saddle point
         if eigval <= -0.5 * delta:
             # +/- 1 with p=0.5
             factor = 2 * torch.bernoulli(torch.tensor(0.5)) - 1
@@ -192,8 +190,6 @@ def natasha_2(train_dataset,
                 return natasha_reg(x, curr_params, L, L_2,
                                    delta) + regularizer(x)
 
-            #print(regularizer(model.parameters()), reg_k(model.parameters()))
-
             if spider:
                 _ = spider_boost(train_dataset, B, model, loss_fn, reg_k, lr,
                                  1)
@@ -206,7 +202,6 @@ def natasha_2(train_dataset,
                                lr,
                                1,
                                sigma=3 * delta)
-            #print(_)
 
             with torch.no_grad():
                 b_pred = model(A)
