@@ -9,3 +9,12 @@
 ### [SpiderBoost and Momentum: Faster Stochastic Variance Reduction Algorithms.](https://papers.nips.cc/paper/8511-spiderboost-and-momentum-faster-variance-reduction-algorithms.pdf)
 
 ### [SPIDER : Near-Optimal Non-Convex Optimization via Stochastic Path Integrated Differential Estimator](https://papers.nips.cc/paper/7349-spider-near-optimal-non-convex-optimization-via-stochastic-path-integrated-differential-estimator.pdf)
+
+## Проект выполняли:
+Баширов Башир ~25%
+
+Горбачев Николай ~25%
+
+Жестянкин Борис ~25%
+
+Савёлов Михаил ~25%
